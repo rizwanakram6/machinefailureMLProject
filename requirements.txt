@@ -7,6 +7,5 @@ scikit-learn
 dvc
 seaborn
 matplotlib
-catboost
-xgboost
-ipykernal
+
+ipykernel
