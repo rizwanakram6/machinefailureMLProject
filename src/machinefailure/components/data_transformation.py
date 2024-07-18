@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
-
+from src.machinefailure.utils import save_object
 
 @dataclass
 class DataTransformationConfig:
@@ -17,7 +17,7 @@ class DataTransformationConfig:
 
 class DataTransformation:
   def __init__(self) -> None:
-    self.data_transformation_obj = DataTransformationConfig()
+    self.data_transformation_config = DataTransformationConfig()
 
   def data_transformer_obj(self):
     try:
@@ -51,7 +51,39 @@ class DataTransformation:
       target_cols_name = ["fail"]
       num_cols_name = ['footfall','tempMode', 'AQ', 'USS', 'CS', 'VOC', 'RP', 'IP', 'Temperature']
 
-      
+      ## Divide the train dataset to independent and dependent feature
+      input_features_train_df = train_df.drop(columns=target_cols_name, axis=1)
+      target_features_train_df = train_df[target_cols_name]
+
+
+      input_features_test_df = test_df.drop(columns=target_cols_name, axis=1)
+      target_features_test_df = test_df[target_cols_name]
+
+      logging.info("Applying Preprocessing on train & test DataFrame")
+
+      input_feature_train_arr = preprocessing_obj.fit_transform(input_features_train_df)
+      input_feature_test_arr = preprocessing_obj.transform(input_features_test_df)
+
+      test_arr = np.c_[
+        input_feature_test_arr, np.array(target_features_test_df)
+      ]
+
+      train_arr = np.c_[
+        input_feature_train_arr, np.array(target_features_train_df)
+      ]
+
+      logging.info("Save Preprocessing Object")
+
+      save_object(
+        file_path= self.data_transformation_config.preprocessor_obj_path,
+        obj= preprocessing_obj
+      )
+
+      return(
+        train_arr,
+        test_arr,
+        self.data_transformation_config.preprocessor_obj_path
+      )
 
     except Exception as e:
       raise CustomException(e,sys)
